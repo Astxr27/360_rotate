@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Perfume 360° Scroll View</title>
+<style>
+  html, body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: #f4f4f4;
+  }
+
+  .spacer {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 1.2rem;
+  }
+
+  /* This is the section that "pins" while the object rotates */
+  .viewer-section {
+    height: 400vh; /* controls how much scroll = one full rotation */
+    position: relative;
+  }
+
+  .viewer-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #frame {
+    width: min(70vw, 500px);
+    height: min(70vw, 500px);
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .progress-track {
+    width: min(70vw, 500px);
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    margin-top: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #333;
+    border-radius: 3px;
+  }
+
+  .hint {
+    margin-top: 12px;
+    color: #999;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="spacer">Scroll down ↓</div>
+
+<div class="viewer-section" id="viewerSection">
+  <div class="viewer-sticky">
+    <img id="frame" src="" alt="360 view of perfume bottle">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="hint">Keep scrolling to rotate the perfume bottle</div>
+  </div>
+</div>
+
+<div class="spacer">More page content below</div>
+
+<script>
+  // ----- CONFIG -----
+  const FRAME_COUNT = 43;                 // img1.jpeg ... img43.jpeg
+  const FRAME_PATH  = (i) => `img${i}.jpeg`;   // 1-indexed
+  // -------------------
+
+  const frameEl = document.getElementById('frame');
+  const section = document.getElementById('viewerSection');
+  const progressFill = document.getElementById('progressFill');
+
+  // Preload all frames so scrubbing feels instant, not laggy
+  const images = [];
+  for (let i = 1; i <= FRAME_COUNT; i++) {
+    const img = new Image();
+    img.src = FRAME_PATH(i);
+    images.push(img);
+  }
+  frameEl.src = images[0].src;
+
+  let ticking = false;
+
+  function updateFrame() {
+    const rect = section.getBoundingClientRect();
+    const scrollableHeight = section.offsetHeight - window.innerHeight;
+
+    // How far we've scrolled through the pinned section, 0 -> 1
+    let progress = -rect.top / scrollableHeight;
+    progress = Math.min(Math.max(progress, 0), 1);
+
+    const frameIndex = Math.min(
+      FRAME_COUNT - 1,
+      Math.floor(progress * FRAME_COUNT)
+    );
+
+    frameEl.src = images[frameIndex].src;
+    progressFill.style.width = `${progress * 100}%`;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateFrame);
+      ticking = true;
+    }
+  });
+
+  updateFrame();
+</script>
+
+</body>
+</html>
